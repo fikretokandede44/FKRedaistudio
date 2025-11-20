@@ -3,7 +3,7 @@ import os
 import time
 import io
 from pydub import AudioSegment
-from pedalboard import Pedalboard, Compressor, Reverb, Limiter, HighpassFilter, Chorus, NoiseGate, LowShelfFilter, HighShelfFilter, Gain, Delay
+from pedalboard import Pedalboard, Compressor, Reverb, Limiter, HighpassFilter, Chorus, NoiseGate, LowShelfFilter, LowPassFilter, HighShelfFilter, Gain, Delay
 from pedalboard.io import AudioFile
 import numpy as np
 
@@ -215,112 +215,4 @@ def process_audio_logic():
 
         effected_audio = board(audio_data, samplerate)
         output_path = os.path.join("temp", "FKRed_Processed_WAV.wav")
-        with AudioFile(output_path, 'w', samplerate, effected_audio.shape[0]) as f:
-            f.write(effected_audio)
-
-        # HAFIZAYA KAYDET
-        st.session_state.processed = True
-        st.session_state.output_path = output_path 
-        st.session_state.download_ready = False
-        
-        progress.progress(100)
-        status.success("✅ İşlem Tamamlandı!")
-        time.sleep(1)
-        progress.empty()
-        status.empty()
-
-    except Exception as e:
-        status.error(f"Hata: {e}")
-
-# --- BAŞLIKLAR ---
-st.markdown("<h1>🔥 FKRed AI Studio</h1>", unsafe_allow_html=True)
-st.markdown("<p class='mfn-production'>MFN Production</p>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>İçerik Üreticileri İçin Akıllı Ses Stüdyosu</p>", unsafe_allow_html=True)
-
-
-# --- ARAYÜZ ---
-col1, col2 = st.columns([1, 1], gap="large")
-
-# GİRİŞ ALANI
-with col1:
-    st.markdown("### 📤 Dosya Yükleme")
-    uploaded_file = st.file_uploader("Dosya Seçin", type=["wav", "mp3", "mp4", "mov", "m4a"], label_visibility="collapsed")
-
-    st.markdown("### 🎛️ Mod Seçimi")
-    processing_mode = st.radio("Sesin modu ne olsun?", ("🎤 VLOG & KONUŞMA (Temiz & Net)", "🎸 MÜZİK & AKUSTİK (Sıcak & Doğal)", "🎙️ PODCAST (Tok & Radyo)"))
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚀 SİHRİ BAŞLAT", use_container_width=True):
-        process_audio_logic()
-
-# SONUÇ VE İNDİRME ALANI
-with col2:
-    if st.session_state.processed:
-        st.markdown("### 🎁 Sonuç Hazır - Farkı Gör!")
-        
-        # --- A/B KARŞILAŞTIRMA ---
-        comp_col1, comp_col2 = st.columns(2)
-        
-        with comp_col1:
-            st.markdown("<p class='comparison-title'>🔴 Ham Kayıt</p>", unsafe_allow_html=True)
-            if 'video' in st.session_state.original_mime:
-                st.video(st.session_state.original_data, format=st.session_state.original_mime)
-            else:
-                st.audio(st.session_state.original_data, format=st.session_state.original_mime)
-
-        with comp_col2:
-            st.markdown("<p class='comparison-title'>🟢 FKRed İşlemi</p>", unsafe_allow_html=True)
-            st.audio(st.session_state.output_path, format="audio/wav")
-
-        st.markdown("---")
-        
-        # --- MONETİZASYON BÖLÜMÜ ---
-        tab1 = st.tabs(["🆓 İNDİRME GÖREVİ"])
-        
-        with tab1[0]:
-            st.markdown("""
-            <div class='free-box'>
-                <h3>📺 ÜCRETSİZ İNDİRME GÖREVİ</h3>
-                <p>İndirme butonunun açılması için aşağıdaki videonun süresi dolana kadar bekleyin.</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            st.video(REKLAM_LINKI)
-            
-            # Geri Sayım ve Kilit
-            if not st.session_state.download_ready:
-                
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                # 10 saniye bekle
-                for i in range(10, 0, -1):
-                    status_text.warning(f"⏳ Lütfen bekleyin... İndirme {i} saniye sonra açılacak.")
-                    progress_bar.progress((10 - i) * 10)
-                    time.sleep(1)
-                
-                status_text.success("🔓 Kilit Açıldı!")
-                st.session_state.download_ready = True
-                st.rerun() # Sayfayı yenile ve butonu göster
-
-            # İndirme Butonu (Süre bittiyse görünür)
-            if st.session_state.download_ready:
-                free_data = convert_wav_to_target_format(st.session_state.output_path, st.session_state.file_ext)
-                free_filename = f"FKRed_Master.{st.session_state.file_ext}"
-                free_mime = get_mime_type(st.session_state.file_ext)
-                
-                st.success("✅ Dosyanız hazır.")
-                st.download_button(
-                    label=f"⬇️ {st.session_state.file_ext.upper()} OLARAK İNDİR",
-                    data=free_data,
-                    file_name=free_filename,
-                    mime=free_mime,
-                    use_container_width=True
-                )
-
-# --- SAYFANIN EN ALTINA KALICI FOOTER (Fikret Okan Dede İmzası) ---
-st.markdown("""
-<div class="footer">
-    © 2025 FKRed AI Studio | Geliştirici: Fikret Okan Dede
-</div>
-""", unsafe_allow_html=True)
+        with AudioFile(output_path
