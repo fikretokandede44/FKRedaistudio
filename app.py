@@ -89,7 +89,7 @@ st.markdown("<h1>🔥 FKRed AI Studio</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>İçerik Üreticileri İçin Yeni Nesil Ses Mühendisliği</p>", unsafe_allow_html=True)
 
 # --- AYARLAR ---
-REKLAM_LINKI = "https://www.youtube.com/watch?v=dQw4w9WgXcQ" # Buraya kendi videonu koy
+REKLAM_LINKI = "https://www.youtube.com/watch?v=sgWLgb5-aJY" # Buraya kendi videonu koy
 
 # --- ANA ARAYÜZ (KARTLAR HALİNDE) ---
 col1, col2 = st.columns([1, 1], gap="large")
