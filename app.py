@@ -6,9 +6,6 @@ from pydub import AudioSegment
 from pedalboard import Pedalboard, Compressor, Reverb, Limiter, HighpassFilter, Chorus, NoiseGate, LowShelfFilter, HighShelfFilter, Gain, Delay
 from pedalboard.io import AudioFile
 import numpy as np
-import static_ffmpeg
-static_ffmpeg.add_paths()
-
 
 # --- SAYFA AYARLARI ---
 st.set_page_config(
@@ -20,7 +17,7 @@ st.set_page_config(
 # --- ÖZEL CSS TASARIMI (ATEŞ VE KIZIL ODAK) ---
 st.markdown("""
 <style>
-    /* Global App Background - Derin Siyah */
+    /* Global App Background */
     .stApp {
         background-image: linear-gradient(to bottom, #0F0F0F, #161616);
         color: #E0E0E0;
@@ -29,47 +26,36 @@ st.markdown("""
     /* Ana Başlık Stili - Alev Geçişi */
     h1 {
         text-align: center;
-        /* Kırmızıdan Turuncuya Yumuşak Geçiş (Ateş Hissi) */
         background: -webkit-linear-gradient(90deg, #FF3333, #FF9933);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 4rem !important; /* Daha da büyütülmüş */
+        font-size: 4rem !important; 
         font-weight: 900;
         letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Hafif gölge */
-        margin-bottom: 0px; /* FKRed ile MFN arasındaki boşluğu kapat */
+        text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+        margin-bottom: 0px; 
     }
     
-    /* YENİ: MFN Production Alt Başlığı */
+    /* MFN Production Alt Başlığı */
     .mfn-production {
         text-align: center;
-        /* Ana başlıkla aynı ateş gradienti */
         background: -webkit-linear-gradient(90deg, #FF3333, #FF9933);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-size: 1.5rem;
         font-weight: 700;
-        margin-top: 5px; /* Başlıkla arasında hafif boşluk */
+        margin-top: 5px;
     }
 
     /* Streamlit Alt Başlığı */
     .subtitle {
         text-align: center;
-        color: #FFC0C0; /* Açık kırmızımsı beyaz */
+        color: #FFC0C0;
         font-size: 1.3rem;
         margin-bottom: 40px;
-        margin-top: 15px; /* MFN yazısı ile arasına boşluk */
+        margin-top: 15px;
     }
 
-    /* Input/Box Tasarımı */
-    .stFileUploader, [data-testid="stTextInput"], [data-testid="stSelectbox"] {
-        background-color: #1A1A1A;
-        border: 1px solid #FF4B4B !important; /* Kırmızı Çerçeve */
-        border-radius: 8px;
-        padding: 10px;
-        color: #E0E0E0;
-    }
-    
     /* Ana Çalışma Butonu (Launch Button) */
     .stButton>button {
         background: linear-gradient(90deg, #FF0000 0%, #CC0000 100%);
@@ -79,7 +65,7 @@ st.markdown("""
         font-size: 20px;
         font-weight: bold;
         border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(255, 0, 0, 0.5); /* Glow */
+        box-shadow: 0 4px 20px rgba(255, 0, 0, 0.5); 
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
@@ -90,20 +76,20 @@ st.markdown("""
     /* İndirme Kilit Kutusu */
     .free-box {
         background-color: #262626; 
-        border: 1px solid #FF4B4B; /* Kırmızı Kontur */
+        border: 1px solid #FF4B4B; 
         color: white; 
         padding: 20px; 
         border-radius: 15px;
     }
 
-    /* YENİ: Alt Bilgi (Footer) */
+    /* Alt Bilgi (Footer) */
     .footer {
-        position: fixed; /* Sayfada sabit kalır */
+        position: fixed;
         left: 0;
         bottom: 0;
         width: 100%;
-        background-color: #0F0F0F; /* Koyu arka plan */
-        color: #555; /* Silik gri */
+        background-color: #0F0F0F;
+        color: #555;
         text-align: right;
         padding: 5px 15px;
         font-size: 0.8rem;
@@ -234,10 +220,11 @@ def process_audio_logic():
     except Exception as e:
         status.error(f"Hata: {e}")
 
-# --- BAŞLIKLAR GÜNCELLENDİ ---
+# --- BAŞLIKLAR ---
 st.markdown("<h1>🔥 FKRed AI Studio</h1>", unsafe_allow_html=True)
 st.markdown("<p class='mfn-production'>MFN Production</p>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>İçerik Üreticileri İçin Akıllı Ses Stüdyosu</p>", unsafe_allow_html=True)
+
 
 # --- ARAYÜZ ---
 col1, col2 = st.columns([1, 1], gap="large")
@@ -271,7 +258,6 @@ with col2:
 
         with comp_col2:
             st.markdown("<p class='comparison-title'>🟢 FKRed İşlemi</p>", unsafe_allow_html=True)
-            # İşlenmiş WAV'ı dinlet
             st.audio(st.session_state.output_path, format="audio/wav")
 
         st.markdown("---")
