@@ -14,36 +14,35 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- YENİ CSS DEĞİŞKENLERİ (KeyError'u Çözen Satırlar) ---
-NETFLIX_RED_BRIGHT = "#E50914"
-NETFLIX_RED_DARK = "#CC0000"
+# --- ÖZEL CSS TASARIMI (PITCH BLACK & NEON) ---
+NEON_RED = "#FF3366" # Parlak Kırmızı/Pembe Neon
+DARK_GRAY = "#1A1A1A" # Giriş Kutusu Arka Planı
 
-# --- ÖZEL CSS TASARIMI (PITCH DARK & NETFLIX KIRMIZISI) ---
 st.markdown(f"""
 <style>
-    /* Global App Background */
+    /* Global App Background - TAMAMEN SİYAH */
     .stApp {{
-        background-image: linear-gradient(to bottom, #050505, #000000); 
+        background-image: linear-gradient(to bottom, #000000, #000000); 
         color: #E0E0E0;
     }}
     
-    /* Ana Başlık Stili - Alev Geçişi */
+    /* Ana Başlık Stili - NEON VURGU */
     h1 {{
         text-align: center;
-        background: -webkit-linear-gradient(90deg, {NETFLIX_RED_DARK}, {NETFLIX_RED_BRIGHT});
+        background: -webkit-linear-gradient(90deg, #FF6666, #FF0066);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-size: 4rem !important;
         font-weight: 900;
         letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(229, 9, 20, 0.5); 
+        text-shadow: 0 0 10px {NEON_RED}; /* Neon Glow */
         margin-bottom: 0px; 
     }}
     
     /* MFN Production Alt Başlığı */
     .mfn-production {{
         text-align: center;
-        background: -webkit-linear-gradient(90deg, {NETFLIX_RED_DARK}, {NETFLIX_RED_BRIGHT});
+        background: -webkit-linear-gradient(90deg, #FF6666, #FF0066);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-size: 1.5rem;
@@ -51,36 +50,35 @@ st.markdown(f"""
         margin-top: 5px;
     }}
 
-    /* Input/Box Tasarımı - NETFLIX KIRMIZISI Çerçeve */
+    /* Input/Box Tasarımı - NEON KONTUR */
     .stFileUploader, [data-testid="stTextInput"], [data-testid="stSelectbox"] {{
-        background-color: #1A1A1A;
-        border: 1px solid {NETFLIX_RED_BRIGHT} !important;
+        background-color: {DARK_GRAY};
+        border: 1px solid {NEON_RED} !important;
         border-radius: 8px;
         padding: 10px;
         color: #E0E0E0;
     }}
     
-    /* Ana Çalışma Butonu - NETFLIX KIRMIZISI Gradient */
+    /* Ana Çalışma Butonu - NEON Gradient */
     .stButton>button {{
-        background: linear-gradient(90deg, {NETFLIX_RED_BRIGHT} 0%, {NETFLIX_RED_DARK} 100%);
+        background: linear-gradient(90deg, #FF0066 0%, #CC0066 100%);
         color: white;
         border: none;
         padding: 15px 30px;
         font-size: 20px;
         font-weight: bold;
         border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(229, 9, 20, 0.5);
+        box-shadow: 0 4px 25px rgba(255, 0, 102, 0.7); /* Güçlü Glow */
         transition: all 0.3s ease;
     }}
     .stButton>button:hover {{
         transform: scale(1.03);
-        box-shadow: 0 6px 25px rgba(229, 9, 20, 0.8);
     }}
     
-    /* İndirme Kilit Kutusu - NETFLIX KIRMIZISI Kontur */
+    /* İndirme Kilit Kutusu */
     .free-box {{
         background-color: #262626; 
-        border: 1px solid {NETFLIX_RED_BRIGHT};
+        border: 1px solid {NEON_RED};
         color: white; 
         padding: 20px; 
         border-radius: 15px;
@@ -92,7 +90,7 @@ st.markdown(f"""
         left: 0;
         bottom: 0;
         width: 100%;
-        background-color: #0F0F0F;
+        background-color: #000000;
         color: #555;
         text-align: right;
         padding: 5px 15px;
@@ -101,7 +99,7 @@ st.markdown(f"""
         border-top: 1px solid #333;
     }}
 </style>
-""".format(NETFLIX_RED_BRIGHT=NETFLIX_RED_BRIGHT, NETFLIX_RED_DARK=NETFLIX_RED_DARK), unsafe_allow_html=True)
+""".format(NEON_RED=NEON_RED, DARK_GRAY=DARK_GRAY), unsafe_allow_html=True)
 
 
 # --- AYARLAR ---
@@ -173,7 +171,7 @@ def process_audio_logic():
 
         with AudioFile(wav_path) as f:
             audio_data = f.read(f.frames)
-            samplerate = f.samplerate
+            samplerate = f.sample_rate
 
         progress.progress(60)
 
@@ -189,12 +187,12 @@ def process_audio_logic():
             ])
         
         elif "MÜZİK" in processing_mode: 
-            # Final MÜZİK/AKUSTİK Ayarı (Reverb %20, Delay %15)
+            # Final MÜZİK/AKUSTİK Ayarı (Reverb %20, Delay %15, Chorus Fix)
             board = Pedalboard([
                 HighpassFilter(cutoff_frequency_hz=50), 
                 HighShelfFilter(cutoff_frequency_hz=7000, gain_db=2.0),
                 Compressor(threshold_db=-14, ratio=2.5),
-                Chorus(rate_hz=0.8, depth=0.015, mix=0.15), # BUG FIX: mix kullanıldı
+                Chorus(rate_hz=0.8, depth=0.015, mix=0.15), 
                 Delay(delay_seconds=0.15, feedback=0.1, mix=0.15), 
                 Reverb(room_size=0.4, damping=0.7, wet_level=0.20), 
                 Limiter(threshold_db=-1.0)
