@@ -4,4 +4,3 @@ pydub
 matchering
 numpy
 scipy
-static-ffmpeg
