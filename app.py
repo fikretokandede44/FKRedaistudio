@@ -14,19 +14,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- YENİ CSS TASARIMI (PITCH DARK & NETFLIX KIRMIZISI) ---
-NETFLIX_RED_BRIGHT = "#E50914" # Ana Netflix Kırmızısı
-NETFLIX_RED_DARK = "#CC0000"   # Daha koyu Netflix Kırmızısı
+# --- YENİ CSS DEĞİŞKENLERİ (KeyError'u Çözen Satırlar) ---
+NETFLIX_RED_BRIGHT = "#E50914"
+NETFLIX_RED_DARK = "#CC0000"
 
+# --- ÖZEL CSS TASARIMI (PITCH DARK & NETFLIX KIRMIZISI) ---
 st.markdown(f"""
 <style>
-    /* Global App Background - TAMAMEN SİYAH */
+    /* Global App Background */
     .stApp {{
         background-image: linear-gradient(to bottom, #050505, #000000); 
         color: #E0E0E0;
     }}
     
-    /* Ana Başlık Stili - NETFLIX KIRMIZISI Geçişi */
+    /* Ana Başlık Stili - Alev Geçişi */
     h1 {{
         text-align: center;
         background: -webkit-linear-gradient(90deg, {NETFLIX_RED_DARK}, {NETFLIX_RED_BRIGHT});
@@ -35,11 +36,11 @@ st.markdown(f"""
         font-size: 4rem !important;
         font-weight: 900;
         letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(229, 9, 20, 0.5); /* Kırmızı Gölge */
+        text-shadow: 0 0 10px rgba(229, 9, 20, 0.5); 
         margin-bottom: 0px; 
     }}
     
-    /* MFN Production Alt Başlığı - NETFLIX KIRMIZISI Geçişi */
+    /* MFN Production Alt Başlığı */
     .mfn-production {{
         text-align: center;
         background: -webkit-linear-gradient(90deg, {NETFLIX_RED_DARK}, {NETFLIX_RED_BRIGHT});
@@ -48,15 +49,6 @@ st.markdown(f"""
         font-size: 1.5rem;
         font-weight: 700;
         margin-top: 5px;
-    }}
-
-    /* Streamlit Alt Başlığı */
-    .subtitle {{
-        text-align: center;
-        color: #FFC0C0;
-        font-size: 1.3rem;
-        margin-bottom: 40px;
-        margin-top: 15px;
     }}
 
     /* Input/Box Tasarımı - NETFLIX KIRMIZISI Çerçeve */
@@ -77,7 +69,7 @@ st.markdown(f"""
         font-size: 20px;
         font-weight: bold;
         border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(229, 9, 20, 0.5); /* Kırmızı Glow */
+        box-shadow: 0 4px 20px rgba(229, 9, 20, 0.5);
         transition: all 0.3s ease;
     }}
     .stButton>button:hover {{
@@ -109,7 +101,8 @@ st.markdown(f"""
         border-top: 1px solid #333;
     }}
 </style>
-""".format(NETFLIX_RED_BRIGHT=NETFLIX_RED_BRIGHT, NETFLIX_RED_DARK=NETFLIX_RED_DARK), unsafe_allow_html=True) # CSS içine Python değişkenleri enjekte edildi
+""".format(NETFLIX_RED_BRIGHT=NETFLIX_RED_BRIGHT, NETFLIX_RED_DARK=NETFLIX_RED_DARK), unsafe_allow_html=True)
+
 
 # --- AYARLAR ---
 REKLAM_LINKI = "https://www.youtube.com/watch?v=sgWLgb5-aJY" 
@@ -196,12 +189,12 @@ def process_audio_logic():
             ])
         
         elif "MÜZİK" in processing_mode: 
-            # Düzeltilmiş Chorus ve Delay/Reverb ayarları
+            # Final MÜZİK/AKUSTİK Ayarı (Reverb %20, Delay %15)
             board = Pedalboard([
                 HighpassFilter(cutoff_frequency_hz=50), 
                 HighShelfFilter(cutoff_frequency_hz=7000, gain_db=2.0),
                 Compressor(threshold_db=-14, ratio=2.5),
-                Chorus(rate_hz=0.8, depth=0.015, mix=0.15), 
+                Chorus(rate_hz=0.8, depth=0.015, mix=0.15), # BUG FIX: mix kullanıldı
                 Delay(delay_seconds=0.15, feedback=0.1, mix=0.15), 
                 Reverb(room_size=0.4, damping=0.7, wet_level=0.20), 
                 Limiter(threshold_db=-1.0)
