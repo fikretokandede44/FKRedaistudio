@@ -1,6 +1,5 @@
 streamlit
-pedalboard
-pydub
-matchering
+pedalboard==0.7.1  # En stabil versiyonu kullanıyoruz
+pydub==0.25.1      # Pydub'ı sabitleyelim
 numpy
 scipy
