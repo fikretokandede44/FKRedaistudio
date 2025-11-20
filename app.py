@@ -1,5 +1,3 @@
-import static_ffmpeg
-static_ffmpeg.add_paths()
 
 import streamlit as st
 import os
