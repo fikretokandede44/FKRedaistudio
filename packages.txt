@@ -1,4 +1,4 @@
 ffmpeg
-build-essential
 libsndfile1-dev
-libasound-dev
+libasound2-dev
+build-essential
