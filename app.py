@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import time
+import io
 from pydub import AudioSegment
 from pedalboard import Pedalboard, Compressor, Reverb, Limiter, HighpassFilter, Chorus, NoiseGate, LowShelfFilter, HighShelfFilter, Gain, Delay
 from pedalboard.io import AudioFile
@@ -13,66 +14,114 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS TASARIMI ---
+# --- ÖZEL CSS TASARIMI (ATEŞ VE KIZIL ODAK) ---
 st.markdown("""
 <style>
-    .stApp { background-image: linear-gradient(to bottom, #0E1117, #161B22); }
+    /* Global App Background - Derin Siyah */
+    .stApp {
+        background-image: linear-gradient(to bottom, #0F0F0F, #161616);
+        color: #E0E0E0;
+    }
+    
+    /* Ana Başlık Stili - Alev Geçişi */
     h1 {
         text-align: center;
-        background: -webkit-linear-gradient(#FF4B4B, #FF914D);
+        /* Kırmızıdan Turuncuya Yumuşak Geçiş (Ateş Hissi) */
+        background: -webkit-linear-gradient(90deg, #FF3333, #FF9933);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 3.5rem !important;
-        font-weight: 800;
+        font-size: 4rem !important; /* Daha da büyütülmüş */
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(255, 51, 51, 0.5); /* Hafif gölge */
     }
-    .premium-box {
-        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-        color: black; padding: 20px; border-radius: 15px; text-align: center;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); margin-bottom: 20px;
+    
+    /* Alt Başlık */
+    .subtitle {
+        text-align: center;
+        color: #FFC0C0; /* Açık kırmızımsı beyaz */
+        font-size: 1.3rem;
+        margin-bottom: 40px;
     }
-    .free-box {
-        background-color: #1F2937; border: 1px solid #FF4B4B;
-        color: white; padding: 20px; border-radius: 15px; text-align: center;
-        margin-bottom: 20px;
+
+    /* Input/Box Tasarımı */
+    .stFileUploader, [data-testid="stTextInput"], [data-testid="stSelectbox"] {
+        background-color: #1A1A1A;
+        border: 1px solid #FF4B4B !important; /* Kırmızı Çerçeve */
+        border-radius: 8px;
+        padding: 10px;
+        color: #E0E0E0;
     }
+    
+    /* Ana Çalışma Butonu (Launch Button) */
     .stButton>button {
-        border-radius: 10px; font-weight: bold; width: 100%;
+        background: linear-gradient(90deg, #FF0000 0%, #CC0000 100%);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(255, 0, 0, 0.5); /* Glow */
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        transform: scale(1.03);
+        box-shadow: 0 6px 25px rgba(255, 0, 0, 0.8);
+    }
+    
+    /* İndirme Kilit Kutusu */
+    .free-box {
+        background-color: #262626; 
+        border: 1px solid #FF4B4B; /* Kırmızı Kontur */
+        color: white; 
+        padding: 20px; 
+        border-radius: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # --- AYARLAR ---
-# Buraya kendi YouTube videonu koy
-REKLAM_LINKI = "https://www.youtube.com/watch?v=sgWLgb5-aJY"
+REKLAM_LINKI = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ODEME_LINKI = "https://shopier.com/linkin" 
 
-# --- BAŞLIK ---
-st.markdown("<h1>🔥 FKRed AI Studio</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #888;'>İçerik Üreticileri İçin Akıllı Ses Stüdyosu</p>", unsafe_allow_html=True)
-
 # --- HAFIZA (Session State) ---
-if 'processed' not in st.session_state:
-    st.session_state.processed = False
-if 'output_path' not in st.session_state:
-    st.session_state.output_path = None
-if 'download_ready' not in st.session_state:
-    st.session_state.download_ready = False
+if 'processed' not in st.session_state: st.session_state.processed = False
+if 'output_path' not in st.session_state: st.session_state.output_path = None
+if 'download_ready' not in st.session_state: st.session_state.download_ready = False
+if 'file_ext' not in st.session_state: st.session_state.file_ext = 'wav'
+if 'original_data' not in st.session_state: st.session_state.original_data = None
+if 'original_mime' not in st.session_state: st.session_state.original_mime = None
 
-# --- ARAYÜZ ---
-col1, col2 = st.columns([1, 1], gap="large")
+# --- YARDIMCI FONKSİYONLAR (Aynı Kalır) ---
+def get_mime_type(ext):
+    if ext == 'mp3': return 'audio/mpeg'
+    if ext in ['mp4', 'mov', 'm4a']: return 'video/mp4'
+    return 'audio/wav'
 
-with col1:
-    st.markdown("### 📤 Dosya Yükleme")
-    uploaded_file = st.file_uploader("Dosya Seçin", type=["wav", "mp3", "mp4", "mov", "m4a"], label_visibility="collapsed")
+def convert_wav_to_target_format(wav_path, target_ext):
+    output_buffer = io.BytesIO()
+    try:
+        audio = AudioSegment.from_wav(wav_path)
+        export_format = 'mp4' if target_ext in ['mp4', 'mov', 'm4a'] else target_ext
+        if export_format == 'mp3':
+            audio.export(output_buffer, format="mp3", parameters=['-q:a', '0'])
+        else:
+            audio.export(output_buffer, format=export_format)
+        return output_buffer.getvalue()
+    except Exception as e:
+        st.warning(f"Dönüştürme Hatası ({target_ext}). WAV olarak indiriliyor.")
+        with open(wav_path, "rb") as f:
+            return f.read()
 
-    st.markdown("### 🎛️ Mod Seçimi")
-    processing_mode = st.radio("Sesin modu ne olsun?", ("🎤 VLOG (Temiz & Net)", "🎸 MÜZİK (Akustik & Sıcak)", "🎙️ PODCAST (Tok & Radyo)"))
-
-# --- İŞLEM FONKSİYONU ---
 def process_audio_logic():
     if uploaded_file is None:
         st.error("⚠️ Lütfen dosya yükleyin!")
         return
+
+    st.session_state.original_data = uploaded_file.getvalue()
+    st.session_state.original_mime = uploaded_file.type
+    st.session_state.file_ext = uploaded_file.name.split('.')[-1].lower()
 
     progress = st.progress(0)
     status = st.empty()
@@ -85,11 +134,8 @@ def process_audio_logic():
             f.write(uploaded_file.getbuffer())
         
         progress.progress(30)
-
         audio = AudioSegment.from_file(input_path)
-        if "MÜZİK" in processing_mode and audio.channels == 1:
-            audio = audio.set_channels(2)
-        
+        if "MÜZİK" in processing_mode and audio.channels == 1: audio = audio.set_channels(2)
         wav_path = os.path.join("temp", "temp_input.wav")
         audio.export(wav_path, format="wav")
 
@@ -99,41 +145,21 @@ def process_audio_logic():
 
         progress.progress(60)
 
+        # Efekt Zincirleri (Aynı kalır)
         board = None
-        if "VLOG" in processing_mode:
-            board = Pedalboard([
-                NoiseGate(threshold_db=-35, ratio=3),
-                HighpassFilter(cutoff_frequency_hz=90),
-                Compressor(threshold_db=-16, ratio=3),
-                Gain(gain_db=2.0),
-                Limiter(threshold_db=-1.0)
-            ])
-        elif "MÜZİK" in processing_mode:
-            board = Pedalboard([
-                HighpassFilter(cutoff_frequency_hz=50), 
-                HighShelfFilter(cutoff_frequency_hz=7000, gain_db=3.0),
-                Compressor(threshold_db=-12, ratio=2.0),
-                Delay(delay_seconds=0.15, feedback=0.1, mix=0.10), 
-                Reverb(room_size=0.4, damping=0.7, wet_level=0.20),
-                Limiter(threshold_db=-1.0)
-            ])
-        elif "PODCAST" in processing_mode:
-            board = Pedalboard([
-                HighpassFilter(cutoff_frequency_hz=50),
-                LowShelfFilter(cutoff_frequency_hz=120, gain_db=5.0),
-                Compressor(threshold_db=-18, ratio=4),
-                Limiter(threshold_db=-1.0)
-            ])
+        if "VLOG" in processing_mode: board = Pedalboard([NoiseGate(threshold_db=-35, ratio=3), HighpassFilter(cutoff_frequency_hz=90), Compressor(threshold_db=-16, ratio=3), Gain(gain_db=2.0), Limiter(threshold_db=-1.0)])
+        elif "MÜZİK" in processing_mode: board = Pedalboard([HighpassFilter(cutoff_frequency_hz=50), HighShelfFilter(cutoff_frequency_hz=7000, gain_db=3.0), Compressor(threshold_db=-12, ratio=2.0), Delay(delay_seconds=0.15, feedback=0.1, mix=0.10), Reverb(room_size=0.4, damping=0.7, wet_level=0.20), Limiter(threshold_db=-1.0)])
+        elif "PODCAST" in processing_mode: board = Pedalboard([HighpassFilter(cutoff_frequency_hz=50), LowShelfFilter(cutoff_frequency_hz=120, gain_db=5.0), Compressor(threshold_db=-18, ratio=4), Limiter(threshold_db=-1.0)])
 
         effected_audio = board(audio_data, samplerate)
-        
-        output_path = "FKRed_Master.wav"
+        output_path = os.path.join("temp", "FKRed_Processed_WAV.wav")
         with AudioFile(output_path, 'w', samplerate, effected_audio.shape[0]) as f:
             f.write(effected_audio)
 
-        # Hafızaya kaydet
+        # HAFIZAYA KAYDET
         st.session_state.processed = True
-        st.session_state.output_path = output_path
+        st.session_state.output_path = output_path 
+        st.session_state.download_ready = False
         
         progress.progress(100)
         status.success("✅ İşlem Tamamlandı!")
@@ -144,74 +170,83 @@ def process_audio_logic():
     except Exception as e:
         status.error(f"Hata: {e}")
 
-# --- BAŞLAT BUTONU ---
+# --- ARAYÜZ ---
+col1, col2 = st.columns([1, 1], gap="large")
+
+# GİRİŞ ALANI
 with col1:
+    uploaded_file = st.empty()
+    st.markdown("### 📤 Dosya Yükleme")
+    uploaded_file = st.file_uploader("Dosya Seçin", type=["wav", "mp3", "mp4", "mov", "m4a"], label_visibility="collapsed")
+
+    st.markdown("### 🎛️ Mod Seçimi")
+    processing_mode = st.radio("Sesin modu ne olsun?", ("🎤 VLOG & KONUŞMA (Temiz & Net)", "🎸 MÜZİK & AKUSTİK (Sıcak & Doğal)", "🎙️ PODCAST (Tok & Radyo)"))
+
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚀 SESİ GÜZELLEŞTİR", use_container_width=True):
+    if st.button("🚀 SİHRİ BAŞLAT", use_container_width=True):
         process_audio_logic()
 
-# --- SONUÇ VE GİZLİ İNDİRME (SAĞ KOLON) ---
+# SONUÇ VE İNDİRME ALANI
 with col2:
     if st.session_state.processed:
-        st.markdown("### 🎁 Sonuç Hazır")
-        st.audio(st.session_state.output_path)
+        st.markdown("### 🎁 Sonuç Hazır - Farkı Gör!")
         
+        # --- A/B KARŞILAŞTIRMA ---
+        comp_col1, comp_col2 = st.columns(2)
+        
+        with comp_col1:
+            st.markdown("<p class='comparison-title'>🔴 Ham Kayıt</p>", unsafe_allow_html=True)
+            if 'video' in st.session_state.original_mime:
+                st.video(st.session_state.original_data, format=st.session_state.original_mime)
+            else:
+                st.audio(st.session_state.original_data, format=st.session_state.original_mime)
+
+        with comp_col2:
+            st.markdown("<p class='comparison-title'>🟢 FKRed İşlemi</p>", unsafe_allow_html=True)
+            st.audio(st.session_state.output_path, format="audio/wav")
+
         st.markdown("---")
         
-        tab1, tab2 = st.tabs(["💎 PREMIUM ($10)", "🆓 BEDAVA (10 Sn Bekle)"])
+        # --- MONETİZASYON BÖLÜMÜ ---
+        tab1 = st.tabs(["🆓 İNDİRME GÖREVİ"])
         
-        # --- PREMIUM ---
-        with tab1:
-            st.markdown("""
-            <div class='premium-box'>
-                <h3>🚀 HIZLI İNDİRME</h3>
-                <p>Beklemek yok. Reklam yok. Profesyonel Kalite.</p>
-                <h2>$10.00</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            st.link_button("💳 HEMEN SATIN AL", ODEME_LINKI, use_container_width=True)
-
-        # --- BEDAVA (GİZLİ SAYAÇLI) ---
-        with tab2:
+        with tab1[0]:
             st.markdown("""
             <div class='free-box'>
-                <h3>📺 SPONSOR DESTEĞİ</h3>
-                <p>İndirme butonu videoyu izledikten sonra açılır.</p>
+                <h3>📺 ÜCRETSİZ İNDİRME GÖREVİ</h3>
+                <p>İndirme butonunun açılması için aşağıdaki videonun süresi dolana kadar bekleyin.</p>
             </div>
             """, unsafe_allow_html=True)
 
-            # Video Göster
             st.video(REKLAM_LINKI)
             
-            # Tetikleyici Buton (Süreci Başlatır)
+            # Geri Sayım ve Kilit
             if not st.session_state.download_ready:
-                if st.button("⏱️ Süreyi Başlat (Video Oynuyor...)", use_container_width=True):
-                    
-                    # Geri Sayım Efekti
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
-                    
-                    for i in range(10, 0, -1):
-                        status_text.warning(f"⏳ Lütfen bekleyin... İndirme {i} saniye sonra açılacak.")
-                        progress_bar.progress((10 - i) * 10)
-                        time.sleep(1)
-                    
-                    progress_bar.progress(100)
-                    status_text.success("🔓 Kilit Açıldı!")
-                    time.sleep(0.5)
-                    
-                    # Kilidi aç ve sayfayı yenile (Session State tuttuğu için dosya gitmez)
-                    st.session_state.download_ready = True
-                    st.rerun()
+                
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                # 10 saniye bekle
+                for i in range(10, 0, -1):
+                    status_text.warning(f"⏳ Lütfen bekleyin... İndirme {i} saniye sonra açılacak.")
+                    progress_bar.progress((10 - i) * 10)
+                    time.sleep(1)
+                
+                status_text.success("🔓 Kilit Açıldı!")
+                st.session_state.download_ready = True
+                st.rerun() # Sayfayı yenile ve butonu göster
 
-            # SÜRE BİTTİYSE BUTONU GÖSTER
+            # İndirme Butonu (Süre bittiyse görünür)
             if st.session_state.download_ready:
-                st.success("✅ Teşekkürler! Dosyanız hazır.")
-                with open(st.session_state.output_path, "rb") as f:
-                    st.download_button(
-                        label="⬇️ WAV OLARAK İNDİR",
-                        data=f,
-                        file_name="FKRed_Master.wav",
-                        mime="audio/wav",
-                        use_container_width=True
-                    )
+                free_data = convert_wav_to_target_format(st.session_state.output_path, st.session_state.file_ext)
+                free_filename = f"FKRed_Master.{st.session_state.file_ext}"
+                free_mime = get_mime_type(st.session_state.file_ext)
+                
+                st.success("✅ Dosyanız hazır.")
+                st.download_button(
+                    label=f"⬇️ {st.session_state.file_ext.upper()} OLARAK İNDİR",
+                    data=free_data,
+                    file_name=free_filename,
+                    mime=free_mime,
+                    use_container_width=True
+                )
