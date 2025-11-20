@@ -14,76 +14,88 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ÖZEL CSS TASARIMI (ATEŞ VE KIZIL ODAK) ---
-st.markdown("""
+# --- YENİ CSS TASARIMI (PITCH DARK & NETFLIX KIRMIZISI) ---
+NETFLIX_RED_BRIGHT = "#E50914" # Ana Netflix Kırmızısı
+NETFLIX_RED_DARK = "#CC0000"   # Daha koyu Netflix Kırmızısı
+
+st.markdown(f"""
 <style>
-    /* Global App Background */
-    .stApp {
-        background-image: linear-gradient(to bottom, #0F0F0F, #161616);
+    /* Global App Background - TAMAMEN SİYAH */
+    .stApp {{
+        background-image: linear-gradient(to bottom, #050505, #000000); 
         color: #E0E0E0;
-    }
+    }}
     
-    /* Ana Başlık Stili - Alev Geçişi */
-    h1 {
+    /* Ana Başlık Stili - NETFLIX KIRMIZISI Geçişi */
+    h1 {{
         text-align: center;
-        background: -webkit-linear-gradient(90deg, #FF3333, #FF9933);
+        background: -webkit-linear-gradient(90deg, {NETFLIX_RED_DARK}, {NETFLIX_RED_BRIGHT});
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 4rem !important; 
+        font-size: 4rem !important;
         font-weight: 900;
         letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+        text-shadow: 0 0 10px rgba(229, 9, 20, 0.5); /* Kırmızı Gölge */
         margin-bottom: 0px; 
-    }
+    }}
     
-    /* MFN Production Alt Başlığı */
-    .mfn-production {
+    /* MFN Production Alt Başlığı - NETFLIX KIRMIZISI Geçişi */
+    .mfn-production {{
         text-align: center;
-        background: -webkit-linear-gradient(90deg, #FF3333, #FF9933);
+        background: -webkit-linear-gradient(90deg, {NETFLIX_RED_DARK}, {NETFLIX_RED_BRIGHT});
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-size: 1.5rem;
         font-weight: 700;
         margin-top: 5px;
-    }
+    }}
 
     /* Streamlit Alt Başlığı */
-    .subtitle {
+    .subtitle {{
         text-align: center;
         color: #FFC0C0;
         font-size: 1.3rem;
         margin-bottom: 40px;
         margin-top: 15px;
-    }
+    }}
 
-    /* Ana Çalışma Butonu (Launch Button) */
-    .stButton>button {
-        background: linear-gradient(90deg, #FF0000 0%, #CC0000 100%);
+    /* Input/Box Tasarımı - NETFLIX KIRMIZISI Çerçeve */
+    .stFileUploader, [data-testid="stTextInput"], [data-testid="stSelectbox"] {{
+        background-color: #1A1A1A;
+        border: 1px solid {NETFLIX_RED_BRIGHT} !important;
+        border-radius: 8px;
+        padding: 10px;
+        color: #E0E0E0;
+    }}
+    
+    /* Ana Çalışma Butonu - NETFLIX KIRMIZISI Gradient */
+    .stButton>button {{
+        background: linear-gradient(90deg, {NETFLIX_RED_BRIGHT} 0%, {NETFLIX_RED_DARK} 100%);
         color: white;
         border: none;
         padding: 15px 30px;
         font-size: 20px;
         font-weight: bold;
         border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(255, 0, 0, 0.5); 
+        box-shadow: 0 4px 20px rgba(229, 9, 20, 0.5); /* Kırmızı Glow */
         transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
+    }}
+    .stButton>button:hover {{
         transform: scale(1.03);
-        box-shadow: 0 6px 25px rgba(255, 0, 0, 0.8);
-    }
+        box-shadow: 0 6px 25px rgba(229, 9, 20, 0.8);
+    }}
     
-    /* İndirme Kilit Kutusu */
-    .free-box {
+    /* İndirme Kilit Kutusu - NETFLIX KIRMIZISI Kontur */
+    .free-box {{
         background-color: #262626; 
-        border: 1px solid #FF4B4B; 
+        border: 1px solid {NETFLIX_RED_BRIGHT};
         color: white; 
         padding: 20px; 
         border-radius: 15px;
-    }
+    }}
 
     /* Alt Bilgi (Footer) */
-    .footer {
+    .footer {{
         position: fixed;
         left: 0;
         bottom: 0;
@@ -95,9 +107,9 @@ st.markdown("""
         font-size: 0.8rem;
         z-index: 100;
         border-top: 1px solid #333;
-    }
+    }}
 </style>
-""", unsafe_allow_html=True)
+""".format(NETFLIX_RED_BRIGHT=NETFLIX_RED_BRIGHT, NETFLIX_RED_DARK=NETFLIX_RED_DARK), unsafe_allow_html=True) # CSS içine Python değişkenleri enjekte edildi
 
 # --- AYARLAR ---
 REKLAM_LINKI = "https://www.youtube.com/watch?v=sgWLgb5-aJY" 
@@ -184,11 +196,12 @@ def process_audio_logic():
             ])
         
         elif "MÜZİK" in processing_mode: 
+            # Düzeltilmiş Chorus ve Delay/Reverb ayarları
             board = Pedalboard([
                 HighpassFilter(cutoff_frequency_hz=50), 
                 HighShelfFilter(cutoff_frequency_hz=7000, gain_db=2.0),
                 Compressor(threshold_db=-14, ratio=2.5),
-                Chorus(rate_hz=0.8, depth=0.015, wet_level=0.15), 
+                Chorus(rate_hz=0.8, depth=0.015, mix=0.15), 
                 Delay(delay_seconds=0.15, feedback=0.1, mix=0.15), 
                 Reverb(room_size=0.4, damping=0.7, wet_level=0.20), 
                 Limiter(threshold_db=-1.0)
