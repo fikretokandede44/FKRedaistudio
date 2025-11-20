@@ -1,5 +1,5 @@
 streamlit
-pedalboard==0.7.1 # Stabil versiyon
-pydub==0.25.1     # Stabil versiyon
+pedalboard==0.7.1
+pydub==0.25.1
 numpy
 scipy
