@@ -78,12 +78,27 @@ st.markdown("""
         padding: 20px; 
         border-radius: 15px;
     }
+
+    /* YENİ: Alt Bilgi (Footer) */
+    .footer {
+        position: fixed; /* Sayfada sabit kalır */
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #0F0F0F; /* Koyu arka plan */
+        color: #555; /* Silik gri */
+        text-align: right;
+        padding: 5px 15px;
+        font-size: 0.8rem;
+        z-index: 100;
+        border-top: 1px solid #333;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- AYARLAR ---
-REKLAM_LINKI = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-ODEME_LINKI = "https://shopier.com/linkin" 
+# DİKKAT: Reklam linki buymuş, lütfen kontrol et.
+REKLAM_LINKI = "https://www.youtube.com/watch?v=sgWLgb5-aJY" 
 
 # --- HAFIZA (Session State) ---
 if 'processed' not in st.session_state: st.session_state.processed = False
@@ -93,7 +108,7 @@ if 'file_ext' not in st.session_state: st.session_state.file_ext = 'wav'
 if 'original_data' not in st.session_state: st.session_state.original_data = None
 if 'original_mime' not in st.session_state: st.session_state.original_mime = None
 
-# --- YARDIMCI FONKSİYONLAR (Aynı Kalır) ---
+# --- YARDIMCI FONKSİYONLAR ---
 def get_mime_type(ext):
     if ext == 'mp3': return 'audio/mpeg'
     if ext in ['mp4', 'mov', 'm4a']: return 'video/mp4'
@@ -145,10 +160,19 @@ def process_audio_logic():
 
         progress.progress(60)
 
-        # Efekt Zincirleri (Aynı kalır)
+        # Efekt Zincirleri
         board = None
         if "VLOG" in processing_mode: board = Pedalboard([NoiseGate(threshold_db=-35, ratio=3), HighpassFilter(cutoff_frequency_hz=90), Compressor(threshold_db=-16, ratio=3), Gain(gain_db=2.0), Limiter(threshold_db=-1.0)])
-        elif "MÜZİK" in processing_mode: board = Pedalboard([HighpassFilter(cutoff_frequency_hz=50), HighShelfFilter(cutoff_frequency_hz=7000, gain_db=3.0), Compressor(threshold_db=-12, ratio=2.0), Delay(delay_seconds=0.15, feedback=0.1, mix=0.10), Reverb(room_size=0.4, damping=0.7, wet_level=0.20), Limiter(threshold_db=-1.0)])
+        # 🔥 GÜNCELLEME: MÜZİK modu reverb ayarı artırıldı! 🔥
+        elif "MÜZİK" in processing_mode: 
+            board = Pedalboard([
+                HighpassFilter(cutoff_frequency_hz=50), 
+                HighShelfFilter(cutoff_frequency_hz=7000, gain_db=3.0),
+                Compressor(threshold_db=-12, ratio=2.0),
+                Delay(delay_seconds=0.15, feedback=0.1, mix=0.10), 
+                Reverb(room_size=0.6, damping=0.7, wet_level=0.35), # Yeni ayarlar
+                Limiter(threshold_db=-1.0)
+            ])
         elif "PODCAST" in processing_mode: board = Pedalboard([HighpassFilter(cutoff_frequency_hz=50), LowShelfFilter(cutoff_frequency_hz=120, gain_db=5.0), Compressor(threshold_db=-18, ratio=4), Limiter(threshold_db=-1.0)])
 
         effected_audio = board(audio_data, samplerate)
@@ -170,12 +194,16 @@ def process_audio_logic():
     except Exception as e:
         status.error(f"Hata: {e}")
 
+# --- BAŞLIK ---
+st.markdown("<h1>🔥 FKRed AI Studio</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>İçerik Üreticileri İçin Akıllı Ses Stüdyosu</p>", unsafe_allow_html=True)
+
+
 # --- ARAYÜZ ---
 col1, col2 = st.columns([1, 1], gap="large")
 
 # GİRİŞ ALANI
 with col1:
-    uploaded_file = st.empty()
     st.markdown("### 📤 Dosya Yükleme")
     uploaded_file = st.file_uploader("Dosya Seçin", type=["wav", "mp3", "mp4", "mov", "m4a"], label_visibility="collapsed")
 
@@ -250,3 +278,10 @@ with col2:
                     mime=free_mime,
                     use_container_width=True
                 )
+
+# --- SAYFANIN EN ALTINA KALICI FOOTER (Fikret Okan Dede İmzası) ---
+st.markdown("""
+<div class="footer">
+    © 2025 FKRed AI Studio | Geliştirici: Fikret Okan Dede
+</div>
+""", unsafe_allow_html=True)
