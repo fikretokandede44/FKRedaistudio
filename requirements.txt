@@ -1,0 +1,7 @@
+streamlit
+pedalboard
+pydub
+matchering
+numpy
+scipy
+static-ffmpeg
