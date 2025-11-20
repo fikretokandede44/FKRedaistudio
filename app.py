@@ -6,6 +6,9 @@ from pydub import AudioSegment
 from pedalboard import Pedalboard, Compressor, Reverb, Limiter, HighpassFilter, Chorus, NoiseGate, LowShelfFilter, HighShelfFilter, Gain, Delay
 from pedalboard.io import AudioFile
 import numpy as np
+import static_ffmpeg
+static_ffmpeg.add_paths()
+
 
 # --- SAYFA AYARLARI ---
 st.set_page_config(
@@ -33,15 +36,29 @@ st.markdown("""
         font-size: 4rem !important; /* Daha da büyütülmüş */
         font-weight: 900;
         letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(255, 51, 51, 0.5); /* Hafif gölge */
+        text-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Hafif gölge */
+        margin-bottom: 0px; /* FKRed ile MFN arasındaki boşluğu kapat */
     }
     
-    /* Alt Başlık */
+    /* YENİ: MFN Production Alt Başlığı */
+    .mfn-production {
+        text-align: center;
+        /* Ana başlıkla aynı ateş gradienti */
+        background: -webkit-linear-gradient(90deg, #FF3333, #FF9933);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 5px; /* Başlıkla arasında hafif boşluk */
+    }
+
+    /* Streamlit Alt Başlığı */
     .subtitle {
         text-align: center;
         color: #FFC0C0; /* Açık kırmızımsı beyaz */
         font-size: 1.3rem;
         margin-bottom: 40px;
+        margin-top: 15px; /* MFN yazısı ile arasına boşluk */
     }
 
     /* Input/Box Tasarımı */
@@ -97,7 +114,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- AYARLAR ---
-# DİKKAT: Reklam linki buymuş, lütfen kontrol et.
 REKLAM_LINKI = "https://www.youtube.com/watch?v=sgWLgb5-aJY" 
 
 # --- HAFIZA (Session State) ---
@@ -149,8 +165,18 @@ def process_audio_logic():
             f.write(uploaded_file.getbuffer())
         
         progress.progress(30)
+        
+        # Dosyayı yükle
         audio = AudioSegment.from_file(input_path)
-        if "MÜZİK" in processing_mode and audio.channels == 1: audio = audio.set_channels(2)
+        
+        # Mono ise stereo yap
+        if audio.channels == 1:
+            audio = audio.set_channels(2)
+        
+        # Müzik modunda, başlangıçta 16-bit'e çevirerek kalite kaybını önle
+        if "MÜZİK" in processing_mode:
+             audio = audio.set_sample_width(2)
+
         wav_path = os.path.join("temp", "temp_input.wav")
         audio.export(wav_path, format="wav")
 
@@ -162,18 +188,32 @@ def process_audio_logic():
 
         # Efekt Zincirleri
         board = None
-        if "VLOG" in processing_mode: board = Pedalboard([NoiseGate(threshold_db=-35, ratio=3), HighpassFilter(cutoff_frequency_hz=90), Compressor(threshold_db=-16, ratio=3), Gain(gain_db=2.0), Limiter(threshold_db=-1.0)])
-        # 🔥 GÜNCELLEME: MÜZİK modu reverb ayarı artırıldı! 🔥
+        if "VLOG" in processing_mode: 
+            board = Pedalboard([
+                NoiseGate(threshold_db=-35, ratio=3), 
+                HighpassFilter(cutoff_frequency_hz=90), 
+                Compressor(threshold_db=-16, ratio=3), 
+                Gain(gain_db=2.0), 
+                Limiter(threshold_db=-1.0)
+            ])
+        
         elif "MÜZİK" in processing_mode: 
             board = Pedalboard([
                 HighpassFilter(cutoff_frequency_hz=50), 
-                HighShelfFilter(cutoff_frequency_hz=7000, gain_db=3.0),
-                Compressor(threshold_db=-12, ratio=2.0),
-                Delay(delay_seconds=0.15, feedback=0.1, mix=0.10), 
-                Reverb(room_size=0.6, damping=0.7, wet_level=0.35), # Yeni ayarlar
+                HighShelfFilter(cutoff_frequency_hz=7000, gain_db=2.0),
+                Compressor(threshold_db=-14, ratio=2.5),
+                Chorus(rate_hz=0.8, depth=0.015, wet_level=0.15), 
+                Delay(delay_seconds=0.15, feedback=0.1, mix=0.15), 
+                Reverb(room_size=0.4, damping=0.7, wet_level=0.20), 
                 Limiter(threshold_db=-1.0)
             ])
-        elif "PODCAST" in processing_mode: board = Pedalboard([HighpassFilter(cutoff_frequency_hz=50), LowShelfFilter(cutoff_frequency_hz=120, gain_db=5.0), Compressor(threshold_db=-18, ratio=4), Limiter(threshold_db=-1.0)])
+        elif "PODCAST" in processing_mode: 
+            board = Pedalboard([
+                HighpassFilter(cutoff_frequency_hz=50), 
+                LowShelfFilter(cutoff_frequency_hz=120, gain_db=5.0), 
+                Compressor(threshold_db=-18, ratio=4), 
+                Limiter(threshold_db=-1.0)
+            ])
 
         effected_audio = board(audio_data, samplerate)
         output_path = os.path.join("temp", "FKRed_Processed_WAV.wav")
@@ -194,10 +234,10 @@ def process_audio_logic():
     except Exception as e:
         status.error(f"Hata: {e}")
 
-# --- BAŞLIK ---
+# --- BAŞLIKLAR GÜNCELLENDİ ---
 st.markdown("<h1>🔥 FKRed AI Studio</h1>", unsafe_allow_html=True)
+st.markdown("<p class='mfn-production'>MFN Production</p>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>İçerik Üreticileri İçin Akıllı Ses Stüdyosu</p>", unsafe_allow_html=True)
-
 
 # --- ARAYÜZ ---
 col1, col2 = st.columns([1, 1], gap="large")
@@ -231,6 +271,7 @@ with col2:
 
         with comp_col2:
             st.markdown("<p class='comparison-title'>🟢 FKRed İşlemi</p>", unsafe_allow_html=True)
+            # İşlenmiş WAV'ı dinlet
             st.audio(st.session_state.output_path, format="audio/wav")
 
         st.markdown("---")
