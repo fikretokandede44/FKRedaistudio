@@ -1,5 +1,5 @@
 streamlit
-pedalboard==0.7.1
-pydub==0.25.1
+pedalboard
+pydub
 numpy
 scipy
