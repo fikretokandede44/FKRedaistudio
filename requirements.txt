@@ -4,3 +4,4 @@ pydub
 matchering
 numpy
 scipy
+pyaudioop
