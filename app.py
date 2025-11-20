@@ -15,8 +15,8 @@ st.set_page_config(
 )
 
 # --- ÖZEL CSS TASARIMI (PITCH BLACK & NEON) ---
-NEON_RED = "#FF3366" # Parlak Kırmızı/Pembe Neon
-DARK_GRAY = "#1A1A1A" # Giriş Kutusu Arka Planı
+NEON_RED = "#FF3366" 
+DARK_GRAY = "#1A1A1A" 
 
 st.markdown(f"""
 <style>
@@ -35,7 +35,7 @@ st.markdown(f"""
         font-size: 4rem !important;
         font-weight: 900;
         letter-spacing: 2px;
-        text-shadow: 0 0 10px {NEON_RED}; /* Neon Glow */
+        text-shadow: 0 0 10px {NEON_RED};
         margin-bottom: 0px; 
     }}
     
@@ -48,6 +48,15 @@ st.markdown(f"""
         font-size: 1.5rem;
         font-weight: 700;
         margin-top: 5px;
+    }}
+
+    /* Streamlit Alt Başlığı */
+    .subtitle {{
+        text-align: center;
+        color: #FFC0C0;
+        font-size: 1.3rem;
+        margin-bottom: 40px;
+        margin-top: 15px;
     }}
 
     /* Input/Box Tasarımı - NEON KONTUR */
@@ -68,7 +77,7 @@ st.markdown(f"""
         font-size: 20px;
         font-weight: bold;
         border-radius: 10px;
-        box-shadow: 0 4px 25px rgba(255, 0, 102, 0.7); /* Güçlü Glow */
+        box-shadow: 0 4px 25px rgba(255, 0, 102, 0.7);
         transition: all 0.3s ease;
     }}
     .stButton>button:hover {{
@@ -187,7 +196,6 @@ def process_audio_logic():
             ])
         
         elif "MÜZİK" in processing_mode: 
-            # Final MÜZİK/AKUSTİK Ayarı (Reverb %20, Delay %15, Chorus Fix)
             board = Pedalboard([
                 HighpassFilter(cutoff_frequency_hz=50), 
                 HighShelfFilter(cutoff_frequency_hz=7000, gain_db=2.0),
